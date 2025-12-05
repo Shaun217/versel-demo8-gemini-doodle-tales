@@ -53,7 +53,7 @@ async function startMagic() {
 
         // 🔥 关键修改：使用 'gemini-1.5-flash-latest' 以确保找到模型
         // 如果这个还不行，请尝试改为 'gemini-1.5-pro-latest' (注意 Pro 版限制稍微严一点，但更聪明)
-        const modelName = "gemini-1.5-flash-latest"; 
+        const modelName = "gemini-1.5-flash-001"; 
         
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
