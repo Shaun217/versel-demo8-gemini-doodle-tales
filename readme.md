@@ -1,57 +1,29 @@
-# 🎨 Magic Doodle Wizard (涂鸦魔法师)
+# 🎨 CartoonMe (卡通变身镜)
 
-> 一个神奇的 AI 网页应用，能将孩子随手画的简笔画或涂鸦，瞬间变成迪士尼/皮克斯风格的精致卡通插画。
+> 一款纯前端运行的 Web 应用，能将你的照片极其逼真地转换为多种卡通风格，并尽可能保留原图的细节特征。
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Status](https://img.shields.io/badge/status-Live-green.svg)
+## ✨ 核心原理 (How it works)
 
-## ✨ 核心创意 (Concept)
+为了在不使用后端服务器的情况下实现“高保真图生图”，我们采用了独特的**“AI 接力”**方案：
 
-我们采用了一条**“聪明且免费”**的技术路径，绕过了昂贵的绘图 API 和复杂的后端服务器：
+1.  **🕵️‍♂️ 显微镜观察 (Gemini Vision)**：
+    我们不让 AI 发挥想象，而是命令 Google Gemini 扮演一名“法医摄影师”。它会用极尽详细的语言描述照片中的每一个物体、颜色、材质、光线和上面的文字/Logo。
+2.  **🎨 精准重绘 (Pollinations AI)**：
+    我们将这段包含无数细节的描述，加上用户选择的风格（如“皮克斯风格”），发送给开源绘图引擎 Pollinations。绘图 AI 根据这些详实的依据重新绘制画面，从而达到神似的效果。
 
-1.  **👀 慧眼识图 (Gemini Vision)**：
-    利用 Google Gemini 强大的视觉理解能力，识别用户上传涂鸦中的核心特征（颜色、物种、形状），并结合用户的情节描述，编写一段专业的**英文绘画提示词 (Prompt)**。
-2.  **🎨 魔法绘制 (Pollinations.ai)**：
-    将 Gemini 写好的咒语发送给开源绘画接口 Pollinations，利用其部署的 **Flux/Stable Diffusion** 模型，生成高质量的 3D 卡通图像。
+## 🌟 功能特点
 
-## 🌟 功能亮点 (Features)
+-   **📷 细节还原**：尽最大努力保留照片中的特定物品（如杯子上的图案、衣服的款式）。
+-   **🎭 多种风格**：内置皮克斯 3D、宫崎骏手绘、美漫等多种流行风格。
+-   **📱 移动端友好**：响应式设计，手机拍照上传体验极佳。
+-   **🔒 隐私安全**：纯前端项目，你的照片和 API Key 均在本地处理，不经过我的服务器。
 
--   **📸 灵魂重绘**：保留涂鸦的“灵魂特征”（如蓝色的猫、红色的圆圈），但赋予其电影级的质感。
--   **📝 故事融合**：不仅仅是重绘，还能根据你输入的文字（如“在吃冰淇淋”）增加动作和背景。
--   **💸 零成本**：
-    -   Gemini API 提供免费额度。
-    -   Pollinations API 完全免费且无需 Key。
--   **🔒 隐私安全**：纯前端运行，API Key 仅保存在浏览器内存中，刷新即焚。
+## 🚀 如何使用
 
-## 🛠 技术栈 (Tech Stack)
+1.  **准备 Key**：你需要一个免费的 [Google Gemini API Key](https://aistudio.google.com/)。
+2.  **部署运行**：将所有文件上传至 GitHub，使用 Vercel 部署。
+3.  **填入 Key**：在页面顶部的设置菜单中填入你的 Key。
+4.  **变身**：拍照或上传图片 -> 选择风格 -> 点击生成！
 
--   **Frontend**: HTML5, CSS3 (Glassmorphism UI), Vanilla JavaScript.
--   **Vision AI**: [Google Gemini API](https://aistudio.google.com/) (gemini-1.5-flash).
--   **Image Gen AI**: [Pollinations.ai](https://pollinations.ai/) (Open Source Image Generation).
--   **Deployment**: GitHub + Vercel.
-
-## 🚀 快速部署 (Deployment)
-
-1.  **获取代码**：下载本项目所有文件 (`index.html`, `style.css`, `script.js`)。
-2.  **上传 GitHub**：将文件拖拽上传至你的 GitHub 仓库。
-3.  **Vercel 部署**：
-    -   在 Vercel 中导入该仓库。
-    -   点击 **Deploy**。
-    -   等待 30 秒即可访问。
-
-## 📖 使用指南 (How to use)
-
-1.  **准备 Key**：去 [Google AI Studio](https://aistudio.google.com/) 申请一个免费的 API Key。
-2.  **上传涂鸦**：
-    -   用手机拍一张孩子的画（画得丑没关系，AI 会拯救它！）。
-    -   或者在纸上随便画个圈圈代替角色。
-3.  **输入脑洞**：
-    -   告诉 AI 正在发生什么。例如：“这只小怪兽正在月球上滑滑梯”。
-4.  **见证魔法**：点击生成，等待约 5-10 秒，一张精美的卡通图就会出现。
-
-## 📂 文件结构
-
-```text
-├── index.html    // 页面结构、Key输入框、结果展示区
-├── style.css     // 魔法卡片风格 UI、加载动画
-├── script.js     // 核心逻辑：上传图片 -> 调用 Gemini -> 调用 Pollinations
-└── README.md     // 项目文档
+---
+*注意：由于纯前端技术的限制，它并非像 Photoshop 滤镜那样像素级对应，而是一个基于你照片内容的“高度相似的重绘”。*
