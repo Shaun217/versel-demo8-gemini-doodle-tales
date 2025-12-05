@@ -1,29 +1,19 @@
 let base64Image = null;
 let imageMimeType = null;
 
-// UI 交互：切换设置菜单
-function toggleSettings() {
-    document.querySelector('.settings-box').classList.toggle('closed');
-}
-
 // 1. 处理图片上传
 function handleFile(event) {
     const file = event.target.files[0];
     if (file) {
-        // 简单的体积校验 (超过 4MB 提醒)
-        if (file.size > 4 * 1024 * 1024) {
-           alert("图片有点大，处理可能会变慢哦，建议压缩一下~");
-        }
-        
         const reader = new FileReader();
         reader.onload = function(e) {
             const raw = e.target.result;
-            // 显示原图预览
-            document.getElementById('originalPreview').src = raw;
-            document.getElementById('originalPreview').classList.remove('hidden');
+            // 预览
+            document.getElementById('previewImg').src = raw;
+            document.getElementById('previewImg').classList.remove('hidden');
             document.getElementById('uploadPlaceholder').classList.add('hidden');
             
-            // 准备 API 数据
+            // 准备发给 API 的数据
             base64Image = raw.split(',')[1];
             imageMimeType = file.type;
         };
@@ -31,12 +21,12 @@ function handleFile(event) {
     }
 }
 
-// 自动适配 Gemini 模型
+// 2. 自动获取 Gemini 模型 (防报错)
 async function getModelName(apiKey) {
     try {
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
         const data = await res.json();
-        // 优先用 flash 模型，速度快
+        // 优先找 flash 模型，便宜又快
         const model = data.models?.find(m => m.name.includes('flash')) || 
                       data.models?.find(m => m.name.includes('pro'));
         return model ? model.name.replace('models/', '') : 'gemini-1.5-flash';
@@ -45,45 +35,44 @@ async function getModelName(apiKey) {
     }
 }
 
-// 2. 核心流程：开始变身
-async function startConversion() {
+// 3. 核心生成逻辑
+async function generateArt() {
     const apiKey = document.getElementById('apiKey').value.trim();
-    const selectedStyle = document.getElementById('styleSelect').value;
+    const userPrompt = document.getElementById('promptInput').value.trim();
     
-    if (!apiKey) {
-        toggleSettings(); // 打开设置提示用户
-        return alert("请先点击上方设置，填入你的 Gemini API Key");
-    }
-    if (!base64Image) return alert("请先拍照或上传图片");
+    if (!apiKey) return alert("请先输入 API Key");
+    if (!base64Image) return alert("请先上传图片");
 
-    // UI 状态更新
-    const genBtn = document.getElementById('generateBtn');
-    const dlBtn = document.getElementById('downloadBtn');
-    const loadingState = document.getElementById('loadingState');
+    // UI 状态
+    const btn = document.getElementById('magicBtn');
+    const resultBox = document.getElementById('resultSection');
+    const loading = document.getElementById('loading');
     const loadingText = document.getElementById('loadingText');
-    const resultImg = document.getElementById('cartoonResult');
-    const resultPlaceholder = document.getElementById('resultPlaceholder');
+    const finalImg = document.getElementById('finalImage');
+    const promptText = document.getElementById('generatedPrompt');
 
-    genBtn.disabled = true;
-    dlBtn.classList.add('hidden');
-    resultImg.classList.add('hidden');
-    resultPlaceholder.classList.add('hidden');
-    loadingState.classList.remove('hidden');
+    btn.disabled = true;
+    resultBox.classList.remove('hidden');
+    loading.classList.remove('hidden');
+    finalImg.classList.add('hidden'); // 先隐藏旧图
 
     try {
-        // --- PHASE 1: Gemini 显微镜观察 (关键!) ---
-        loadingText.innerText = "🔍 AI 正在用显微镜分析照片细节...";
+        // --- STEP 1: 让 Gemini 描述图片并生成绘画咒语 ---
+        loadingText.innerText = "👀 Gemini 正在观察涂鸦...";
         const modelName = await getModelName(apiKey);
         
-        // 🔥 核心 Prompt：强制 Gemini 极其详细地描述细节，不要发挥想象 🔥
+        // 这是一个精心设计的 Prompt，让 Gemini 提取特征
         const systemPrompt = `
-        Task: You are a forensic image analyst. Describe the provided image in extreme detail for the purpose of recreating it accurately in a different art style.
+        你是一个 AI 绘画提示词专家。
+        任务：观察这张用户上传的涂鸦，结合用户的描述，写一个用于 AI 绘画的英文 Prompt。
         
-        Directives:
-        1.  **Object fidelity is paramount.** Describe exactly what objects are present, their specific colors, materials, textures, brand logos (if text is clear), and relative positions.
-        2.  **Describe the environment.** Lighting (soft, harsh, sunny), background elements, time of day.
-        3.  **Do NOT be creative.** Do not invent things not in the photo. Just describe what is there factually and brutally.
-        4.  **Final output format:** Create a single, detailed English paragraph describing the scene. End the paragraph with this exact style modifier string: ", in ${selectedStyle}."
+        用户的描述：${userPrompt || "A cute character"}
+        
+        要求：
+        1. 仔细描述涂鸦中角色的视觉特征（颜色、动物种类、身体形状），一定要保留这些特征。
+        2. 将画风设定为：3D cute cartoon style, Pixar style, high quality, vibrant colors, soft lighting.
+        3. 结合用户的描述加入动作和背景。
+        4. 只输出这一段英文 Prompt，不要包含其他文字。
         `;
 
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
@@ -100,73 +89,43 @@ async function startConversion() {
         });
 
         const data = await res.json();
-        if (!data.candidates) throw new Error("Gemini 无法识别图片内容，请换张图重试。");
+        if (!data.candidates) throw new Error("Gemini 没有返回内容");
         
-        // 获取到超详细的描述 Prompt
-        const detailedPrompt = data.candidates[0].content.parts[0].text.trim();
-        console.log("Gemini 生成的详细描述:", detailedPrompt);
+        // 获取到的英文咒语
+        const magicPrompt = data.candidates[0].content.parts[0].text.trim();
+        promptText.innerText = magicPrompt;
 
-        // --- PHASE 2: Pollinations 绘画 ---
-        loadingText.innerText = "🎨 正在绘制卡通版本 (约 10 秒)...";
+        // --- STEP 2: 调用 Pollinations 生成图片 ---
+        loadingText.innerText = "🎨 正在绘制卡通画...";
         
-        // 使用随机种子防止缓存，尝试使用 flux 模型提升质量
-        const randomSeed = Math.floor(Math.random() * 99999);
-        // URL 编码 Prompt
-        const encodedPrompt = encodeURIComponent(detailedPrompt);
-        // 构造请求地址，强制正方形，使用 flux 模型
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${randomSeed}&model=flux&nolog=true`;
+        // 构造图片 URL (使用 encodeURIComponent 处理特殊字符)
+        // seed 参数加个随机数，保证每次不一样
+        const randomSeed = Math.floor(Math.random() * 10000);
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(magicPrompt)}?width=1024&height=1024&seed=${randomSeed}&model=flux`;
 
-        // 预加载图片
-        const tempImg = new Image();
-        tempImg.src = imageUrl;
-        
-        // 设置超时机制 (Pollinations 有时会卡住)
-        const timeout = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("绘图超时，请重试")), 30000)
-        );
-
-        await Promise.race([
-            new Promise(resolve => tempImg.onload = resolve),
-            timeout
-        ]);
-
-        // 加载成功，显示结果
-        resultImg.src = imageUrl;
-        resultImg.classList.remove('hidden');
-        loadingState.classList.add('hidden');
-        dlBtn.classList.remove('hidden');
-        genBtn.disabled = false;
+        // 预加载图片，加载完再显示
+        const imgObj = new Image();
+        imgObj.src = imageUrl;
+        imgObj.onload = () => {
+            finalImg.src = imageUrl;
+            finalImg.classList.remove('hidden');
+            loading.classList.add('hidden');
+            btn.disabled = false;
+        };
 
     } catch (error) {
-        console.error(error);
         alert("出错了: " + error.message);
-        genBtn.disabled = false;
-        loadingState.classList.add('hidden');
-        resultPlaceholder.classList.remove('hidden');
+        btn.disabled = false;
+        loading.classList.add('hidden');
     }
 }
 
-// 下载功能
 function downloadImage() {
-    const img = document.getElementById('cartoonResult');
+    const img = document.getElementById('finalImage');
     if (img.src) {
-        // 创建一个临时的阿标签触发下载
         const link = document.createElement('a');
-        // 由于跨域图片直接下载可能会变成打开新标签，这里尝试用 fetch 转 blob 下载
-        fetch(img.src)
-            .then(res => res.blob())
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                link.href = url;
-                link.download = 'cartoon_me_result.jpg';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-            })
-            .catch(() => {
-                // 降级方案：直接在新窗口打开
-                window.open(img.src, '_blank');
-            });
+        link.href = img.src;
+        link.download = 'magic_doodle.jpg';
+        link.click();
     }
 }
