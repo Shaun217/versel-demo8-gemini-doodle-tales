@@ -6,7 +6,6 @@ function handleFileSelect(event) {
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            // 原始 Base64 字符串 (包含 "data:image/jpeg;base64,...")
             const rawBase64 = e.target.result;
             
             // 显示预览图
@@ -15,10 +14,10 @@ function handleFileSelect(event) {
             img.style.display = 'block';
             document.getElementById('upload-placeholder').style.display = 'none';
 
-            // ⚠️ 关键：Gemini API 不需要前缀，需要把 "data:image/xxx;base64," 砍掉
+            // ⚠️ Gemini API 需要纯 Base64，去掉前缀
             base64Image = rawBase64.split(',')[1];
             
-            // 获取 MIME 类型 (比如 image/jpeg 或 image/png)
+            // 获取 MIME 类型
             window.imageMimeType = file.type;
         };
         reader.readAsDataURL(file);
@@ -33,19 +32,15 @@ async function startMagic() {
     const loading = document.getElementById('loading');
     const generateBtn = document.getElementById('generateBtn');
 
-    // 校验
     if (!apiKey) return alert("请先粘贴你的 Gemini API Key");
     if (!base64Image) return alert("请先上传一张孩子的画");
 
-    // UI 状态切换
     generateBtn.disabled = true;
     generateBtn.innerText = "✨ 正在施法中...";
     loading.classList.remove('hidden');
     resultArea.classList.add('hidden');
 
     try {
-        // 构造 Prompt (提示词)
-        // 我们告诉 Gemini：看图 + 读情节 + 写童话
         const promptText = `
         你是一位富有想象力的儿童绘本作家。
         请看这张孩子的涂鸦。
@@ -56,25 +51,26 @@ async function startMagic() {
         5. 输出格式请使用 Markdown，适当使用emoji。
         `;
 
-        // 构造 API 请求
-        // 使用 gemini-1.5-flash 模型，速度快且免费额度高
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        // 🔥 关键修改：使用 'gemini-1.5-flash-latest' 以确保找到模型
+        // 如果这个还不行，请尝试改为 'gemini-1.5-pro-latest' (注意 Pro 版限制稍微严一点，但更聪明)
+        const modelName = "gemini-1.5-flash-latest"; 
+        
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
         const payload = {
             contents: [{
                 parts: [
-                    { text: promptText }, // 文字部分
+                    { text: promptText },
                     { 
                         inline_data: { 
                             mime_type: window.imageMimeType || "image/jpeg", 
-                            data: base64Image // 图片部分 (纯Base64)
+                            data: base64Image 
                         } 
                     }
                 ]
             }]
         };
 
-        // 发送请求
         const response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -83,17 +79,21 @@ async function startMagic() {
 
         if (!response.ok) {
             const errData = await response.json();
+            // 打印详细错误到控制台，方便调试
+            console.error("Gemini API Error:", errData);
             throw new Error(errData.error?.message || "网络请求失败");
         }
 
         const data = await response.json();
         
         // 解析 Gemini 的返回结果
-        const storyText = data.candidates[0].content.parts[0].text;
-
-        // 渲染结果
-        document.getElementById('finalStory').innerHTML = marked.parse(storyText);
-        resultArea.classList.remove('hidden');
+        if (data.candidates && data.candidates.length > 0) {
+            const storyText = data.candidates[0].content.parts[0].text;
+            document.getElementById('finalStory').innerHTML = marked.parse(storyText);
+            resultArea.classList.remove('hidden');
+        } else {
+            throw new Error("AI 没有返回内容，可能是图片太模糊或包含敏感内容被拦截。");
+        }
 
     } catch (error) {
         alert("出错了: " + error.message);
