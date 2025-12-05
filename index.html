@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 涂鸦绘梦 (Gemini版)</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🎨 DoodleTales 涂鸦绘梦</h1>
+        <p>Gemini AI 驱动：把孩子的随手涂鸦变成睡前故事</p>
+    </header>
+
+    <div class="settings-box">
+        <label>🔑 Google Gemini API Key</label>
+        <input type="password" id="apiKey" placeholder="粘贴你的 AI Studio Key (以 AIza 开头)">
+        <p class="note">Key 仅保存在本地浏览器，不会上传服务器。</p>
+    </div>
+
+    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <div id="upload-placeholder">
+            <span class="icon">📷</span>
+            <p>点击拍照或上传孩子的涂鸦</p>
+        </div>
+        <img id="preview" src="" alt="涂鸦预览">
+    </div>
+    <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+
+    <div class="input-group">
+        <label>📖 故事灵感 (可选)</label>
+        <textarea id="plotInput" rows="3" placeholder="例如：这只小恐龙想找它的妈妈，它在森林里遇到了一只爱唱歌的兔子..."></textarea>
+    </div>
+
+    <button id="generateBtn" onclick="startMagic()">✨ 施展魔法生成故事</button>
+
+    <div id="loading" class="hidden">
+        <div class="magic-wand">🪄</div>
+        <p>Gemini 正在观察画作并构思故事...</p>
+    </div>
+
+    <div id="resultArea" class="hidden">
+        <div class="story-content markdown-body" id="finalStory"></div>
+        <button class="retry-btn" onclick="window.location.reload()">再玩一次</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

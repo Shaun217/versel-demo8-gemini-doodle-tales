@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
+
+body {
+    font-family: 'Fredoka', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #FFF5E1; /* 暖黄色背景 */
+    background-image: radial-gradient(#FFDEB4 1px, transparent 1px);
+    background-size: 20px 20px;
+    margin: 0;
+    padding: 20px;
+    color: #4A4A4A;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 24px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+    border: 4px solid #FF9A9E;
+}
+
+header { text-align: center; margin-bottom: 25px; }
+h1 { color: #FF6B6B; margin: 0; font-size: 2rem; }
+p { color: #888; margin-top: 5px; }
+
+.settings-box {
+    background: #F0F4F8;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.settings-box input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #D9E2EC;
+    border-radius: 8px;
+    margin-top: 5px;
+    box-sizing: border-box;
+}
+
+.note { font-size: 0.8rem; margin: 5px 0 0 0; }
+
+.upload-area {
+    border: 3px dashed #FFD166;
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    background: #FFFCF5;
+    transition: all 0.3s;
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.upload-area:hover { background: #FFF0D4; border-color: #FFB703; }
+
+#preview {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 10px;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+#fileInput { display: none; }
+.icon { font-size: 3rem; display: block; margin-bottom: 10px; }
+
+textarea {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #BDE0FE;
+    border-radius: 12px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    font-family: inherit;
+    resize: vertical;
+}
+
+button#generateBtn {
+    width: 100%;
+    background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%);
+    color: white;
+    border: none;
+    padding: 18px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-top: 20px;
+    box-shadow: 0 4px 15px rgba(255, 154, 158, 0.4);
+    transition: transform 0.2s;
+}
+
+button#generateBtn:hover { transform: scale(1.02); }
+button#generateBtn:active { transform: scale(0.98); }
+
+/* 结果区 */
+.hidden { display: none; }
+
+#loading { text-align: center; margin-top: 30px; }
+.magic-wand { font-size: 3rem; animation: wave 1.5s infinite; }
+
+@keyframes wave {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(20deg); }
+    100% { transform: rotate(0deg); }
+}
+
+.story-content {
+    background: #F0FFF4;
+    padding: 20px;
+    border-radius: 16px;
+    border: 2px solid #C6F6D5;
+    margin-top: 20px;
+    line-height: 1.8;
+    color: #2F855A;
+    text-align: left;
+}
+
+.retry-btn {
+    background: #EDF2F7;
+    color: #4A5568;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    margin-top: 20px;
+    cursor: pointer;
+}
